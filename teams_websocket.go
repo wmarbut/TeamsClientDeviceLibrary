@@ -33,7 +33,7 @@ func wsLoop(teamsUrl string, msgChannels wsChannels, ctx context.Context) error 
 	wsContext, wsContextCancel := context.WithCancel(ctx)
 	websocketConn, _, err := websocket.DefaultDialer.DialContext(wsContext, teamsUrl, nil)
 	if err != nil {
-		log.Printf("Dial error: %s", err)
+		log.Printf("Dial error: %s for url: %s", err, teamsUrl)
 		return err
 	}
 	defer websocketConn.Close()

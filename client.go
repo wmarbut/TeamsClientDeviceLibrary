@@ -65,16 +65,25 @@ func NewClient(manufacturer, device, app, appVersion, token string, port int) *C
 }
 
 func (c *Client) Connect() error {
+	u := url.URL{
+		Scheme: "ws",
+		Host:   fmt.Sprintf("127.0.0.1:%d", c.port),
+		Path:   "/",
+	}
+	q := make(url.Values)
+	q.Add("protocol-version", "2.0.0")
+	q.Add("manufacturer", c.manufacturer)
+	q.Add("device", c.device)
+	q.Add("app", c.app)
+	q.Add("app-version", c.appVersion)
 	tokenStr := ""
 	if c.token != "" {
 		tokenStr = fmt.Sprintf("&token=%s", c.token)
 	}
-	u := url.URL{
-		Scheme:   "ws",
-		Host:     fmt.Sprintf("127.0.0.1:%d", c.port),
-		Path:     "/",
-		RawQuery: fmt.Sprintf("protocol-version=2.0.0&manufacturer=%s&device=%s&app=%s&app-version=%s%s", c.manufacturer, c.device, c.app, c.appVersion, tokenStr),
+	if tokenStr != "" {
+		q.Add("token", c.token)
 	}
+	u.RawQuery = q.Encode()
 
 	c.autoReconnect = true
 
@@ -144,6 +153,9 @@ func (c *Client) handleMessage(msg TeamsIncomingMessage) {
 		log.Printf("Teams successfully acknowledged message: %d", msg.RequestId)
 	} else {
 		if c.callback != nil {
+			c.lastUpdateMutex.Lock()
+			c.lastUpdate = msg.MeetingUpdate
+			c.lastUpdateMutex.Unlock()
 			c.callback(msg.MeetingUpdate)
 		}
 	}
