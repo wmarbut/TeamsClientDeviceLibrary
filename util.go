@@ -1,10 +1,10 @@
 package TeamsClientDeviceLibrary
 
 import (
+	"io"
 	"log"
-	"os"
 )
 
-func SetLogFile(f *os.File) {
+func SetLogFile(f io.Writer) {
 	log.SetOutput(f)
 }
